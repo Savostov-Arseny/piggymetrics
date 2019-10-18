@@ -1,0 +1,258 @@
+  version: '3.4'
+  services:
+    rabbitmq:
+      image: library/rabbitmq:3-management
+      networks:
+         net:
+           aliases:
+             - rabbitmq
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+      ports:
+        - 15672:15672
+
+
+    config:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+      image: savostovarseny/config:latest
+      networks:
+         net:
+           aliases:
+             - config
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+      ports:
+        - 8888:8888
+
+
+    registry:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+      image: savostovarseny/registry:latest
+      networks:
+         net:
+           aliases:
+             - registry
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+      ports:
+        - 8761:8761
+
+
+    gateway:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+      image: savostovarseny/gateway:latest
+      networks:
+         net:
+           aliases:
+             - gateway
+      deploy:
+        placement:
+          constraints: [node.role == manager]
+
+        restart_policy:
+          condition: on-failure
+          delay: 5s
+          max_attempts: 20
+          window: 30s
+
+      ports:
+        - 80:4000
+
+    auth-service:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+        - NOTIFICATION_SERVICE_PASSWORD=test
+        - STATISTICS_SERVICE_PASSWORD=test
+        - ACCOUNT_SERVICE_PASSWORD=test
+        - MONGODB_PASSWORD=test
+      image: savostovarseny/auth-service:latest
+      networks:
+         net:
+           aliases:
+             - auth-service
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+
+    auth-mongodb:
+      environment:
+        - MONGODB_PASSWORD=test
+      image: savostovarseny/mongodb:latest
+      networks:
+         net:
+           aliases:
+             - auth-mongodb
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+
+    account-service:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+        - ACCOUNT_SERVICE_PASSWORD=test
+        - MONGODB_PASSWORD=test
+      image: savostovarseny/account-service:latest
+      networks:
+         net:
+           aliases:
+             - account-service
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+
+    account-mongodb:
+      environment:
+        - INIT_DUMP=/account-service-dump.js
+        - MONGODB_PASSWORD=test
+      image: savostovarseny/mongodb:latest
+      networks:
+         net:
+           aliases:
+             - account-mongodb
+      deploy:
+        restart_policy:
+          condition: on-failure
+          delay: 5s
+          max_attempts: 20
+          window: 30s
+
+
+    statistics-service:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+        - MONGODB_PASSWORD=test
+        - STATISTICS_SERVICE_PASSWORD=test
+      image: savostovarseny/statistics-service:latest
+      networks:
+         net:
+           aliases:
+             - statistics-service
+
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+
+    statistics-mongodb:
+      environment:
+        - MONGODB_PASSWORD=test
+      image: savostovarseny/mongodb:latest
+      networks:
+         net:
+           aliases:
+             - statistics-mongodb
+
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+    notification-service:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+        - MONGODB_PASSWORD=test
+        - NOTIFICATION_SERVICE_PASSWORD=test
+      image: savostovarseny/notification-service:latest
+      networks:
+         net:
+           aliases:
+             - notification-service
+
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+
+    notification-mongodb:
+      image: savostovarseny/mongodb:latest
+      networks:
+         net:
+           aliases:
+             - notification-mongodb
+
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+      environment:
+        - MONGODB_PASSWORD=test
+
+
+    monitoring:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+      image: savostovarseny/monitoring:latest
+      networks:
+         net:
+           aliases:
+             - monitoring
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+
+      ports:
+        - 9000:8080
+
+    turbine-stream-service:
+      environment:
+        - CONFIG_SERVICE_PASSWORD=test
+      image: savostovarseny/turbine-stream-service
+      networks:
+         net:
+           aliases:
+             - turbine-stream-service
+      deploy:
+            restart_policy:
+              condition: on-failure
+              delay: 5s
+              max_attempts: 20
+              window: 30s
+      ports:
+        - 8989:8989
+
+  networks:
+   net:
+    driver: overlay
+    attachable: true
